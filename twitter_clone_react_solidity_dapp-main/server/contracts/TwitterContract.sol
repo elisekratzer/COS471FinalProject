@@ -10,17 +10,76 @@ contract TwitterContract {
     event AddTweet(address recipient, uint tweetId);
     event DeleteTweet(uint tweetId, bool isDeleted);
 
+    event AddUser(address username)
+
     struct Tweet {
         uint id;
         address username;
         string tweetText;
         bool isDeleted;
+        bool isRetweet;
+        uint replyId;
+        uint likes; //Have to update for every like 
+        uint retweets; //Have to update for every retweet
+
+    }
+
+    //Initialize users
+    struct User{
+        address username;
+        // address[] followers;
+        address[] following;
+        uint balance;
     }
 
     Tweet[] private tweets;
+    User[] private users;
 
     // Mapping of Tweet id to the wallet address of the user
     mapping(uint256 => address) tweetToOwner;
+
+    // Method to be called by our frontend when trying to add a new User
+    function addUser(address username) external{
+        users.push(User(username, [],[],1000));
+        //TODOOO - change balances
+        emit AddUser(username, 1000)
+        
+    }
+
+
+    // ELISE
+
+    // Method to be called by our frontend when trying to add a new user to following list 
+    function follow(){
+
+    }
+    // Method to be called by our frontend when trying to delete a user to following list 
+    function unfollow(){
+
+    }
+
+
+
+    //DIANA AND KEVIN
+
+    // Method to be called by our frontend when trying to add a new retweet
+    function retweet(){
+
+    }
+
+    // Method to be called by our frontend when trying to add a new like to a tweet
+    function like(){
+
+    }
+
+
+    //GABE
+
+    // Method to be called by our frontend when trying to transfer a payment to another user
+    function transferPayment(){
+
+    }
+
 
     // Method to be called by our frontend when trying to add a new Tweet
     function addTweet(string memory tweetText, bool isDeleted) external {
