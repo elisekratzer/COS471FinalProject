@@ -68,20 +68,21 @@ function TweetBox() {
             avatarStyle='Circle'
             {...avatarOptions }
           />
-          <input
+          <textarea
             onChange={(e) => setTweetMessage(e.target.value)}
             value={tweetMessage}
             placeholder="What's happening?"
-            type="text"
+            maxLength="350"
+            rows="3" // specify the number of rows
           />
         </div>
-        <input
+        {/* <input
           value={tweetImage}
           onChange={(e) => setTweetImage(e.target.value)}
           className="tweetBox__imageInput"
           placeholder="Optional: Enter image URL"
           type="text"
-        />
+        /> */}
 
         <Button
           onClick={sendTweet}

@@ -9,22 +9,37 @@
   flex-direction: column;
 }
 
+.tweetBox__input > textarea {
+
+}
+
 .tweetBox__input {
   padding: 20px;
   display: flex;
 }
 
-.tweetBox__input > input {
+.tweetBox__input > textarea {
   flex: 1;
   margin-left: 20px;
   font-size: 20px;
   border: none;
 }
 
-.tweetBox__imageInput {
+.tweetBox__input > textarea {
+  resize: none;
+  overflow: auto;
+  font-family: inherit;
+  line-height: inherit;
+}
+
+textarea:focus {
+  outline-color: #bfbfbf; /* change to a lighter color */
+}
+
+/* .tweetBox__imageInput {
   border: none;
   padding: 10px;
-}
+} */
 
 .tweetBox__tweetButton {
   background-color: var(--twitter-color) !important;

@@ -12,6 +12,8 @@ function App() {
 
   const [currentAccount, setCurrentAccount] = useState('');
   const [correctNetwork, setCorrectNetwork] = useState(false);
+  const [balance, setBalance] = useState("");
+
 
   // Calls Metamask to connect wallet on clicking Connect Wallet button
   const connectWallet = async () => {
@@ -76,6 +78,11 @@ function App() {
     connectWallet();
     checkCorrectNetwork();
   }, []);
+
+  // Update the state of the balance variable
+  const handleSetBalance = (newBalance) => {
+    setBalance(newBalance);
+  };
   
   return (
     // BEM
@@ -89,8 +96,8 @@ function App() {
       </button>
       ) : correctNetwork ? (
         <div className="app">
-          <Sidebar />
-          <Feed />
+          <Sidebar balance={balance} setBalance={handleSetBalance} />
+          <Feed balance={balance} setBalance={handleSetBalance} />
           <Widgets />
         </div>
       ) : (

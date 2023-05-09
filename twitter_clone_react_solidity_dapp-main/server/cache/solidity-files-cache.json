@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\lanie\\Desktop\\COS471\\COS471FinalProject\\twitter_clone_react_solidity_dapp-main\\server\\contracts\\TwitterContract.sol": {
-      "lastModificationDate": 1683586275904,
-      "contentHash": "db5b63574978d44786943ac66b20f627",
+      "lastModificationDate": 1683630764930,
+      "contentHash": "4a5c6fb3027967959ce99b4b993ec549",
       "sourceName": "contracts/TwitterContract.sol",
       "solcConfig": {
         "version": "0.8.4",

@@ -59,7 +59,38 @@ describe("Twitter Contract", function() {
       await expect(await twitter.addTweet(tweet.tweetText, tweet.isDeleted)
     ).to.emit(twitter, 'AddTweet').withArgs(owner.address, NUM_TOTAL_NOT_MY_TWEETS + NUM_TOTAL_MY_TWEETS);
     })
+
   });
+
+  describe("Like a Tweet", function() {
+    it("should emit LikeTweet event", async function() {
+      const TWEET_ID = 0;
+      const TWEET_LIKES1=1;
+
+      await expect(await twitter.likeTweet(TWEET_ID)).to.emit(twitter, 'LikeTweet').withArgs(TWEET_ID, TWEET_LIKES1);
+
+      
+    })
+
+  });
+
+  describe("Reply to Tweet", function() {
+    it("should emit ReplyTweet event", async function() {
+      const TWEET_ID=0;
+      const REPLIES_NUM=1
+
+      let tweet = {
+        'tweetText': 'New Tweet Reply',
+        'isDeleted': false
+      };
+
+      await expect(await twitter.connect(addr2).replyTweet(tweet.tweetText, TWEET_ID)
+    ).to.emit(twitter, 'ReplyTweet').withArgs(addr2.address, REPLIES_NUM);
+    })
+
+  });
+
+
 
   describe("Get All Tweets", function() {
     it("should return the correct number of total tweets", async function() {
@@ -71,7 +102,8 @@ describe("Twitter Contract", function() {
       const myTweetsFromChain = await twitter.getMyTweets();
       expect(myTweetsFromChain.length).to.equal(NUM_TOTAL_MY_TWEETS);
     })
-  })
+  });
+
 
   describe("Delete Tweet", function() {
     it("should emit delete tweet event", async function() {
@@ -86,7 +118,7 @@ describe("Twitter Contract", function() {
         TWEET_ID, TWEET_DELETED
       );
     })
-  })
+  });
 
   describe("Payment Tweet", function() {
     it("should emit payment tweet event", async function() {
@@ -113,6 +145,16 @@ describe("Twitter Contract", function() {
       const balance3 = await twitter.connect(owner).getBalance();
       expect(balance3).to.equal(0);
     })
-  })
+  });
+
+  describe("Set Display Name", function() {
+    it("should change user display name in mapping", async function() {
+      const displayName = "Gabe";
+      await twitter.connect(owner).setDisplayName(displayName);
+      const name = await twitter.getDisplayName();
+      expect(name).to.equal("Gabe");
+    })
+  });
+
 
 });
