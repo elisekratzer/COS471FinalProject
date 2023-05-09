@@ -4,6 +4,9 @@ import Feed from "./Feed";
 import Widgets from "./Widgets";
 import "./App.css";
 import { useState, useEffect } from "react";
+import { TwitterContractAddress } from './config.js';
+import {ethers} from 'ethers';
+import Twitter from './utils/TwitterContract.json'
 
 function App() {
 
@@ -22,10 +25,10 @@ function App() {
       let chainId = await ethereum.request({ method: 'eth_chainId'})
       console.log('Connected to chain:' + chainId)
 
-      const rinkebyChainId = '0x4'
+      const sepoliaChainId = '0xaa36a7'
 
-      if (chainId !== rinkebyChainId) {
-        alert('You are not connected to the Rinkeby Testnet!')
+      if (chainId !== sepoliaChainId) {
+        alert('You are not connected to the Sepolia Testnet!');
         return
       }
 
@@ -33,6 +36,21 @@ function App() {
 
       console.log('Found account', accounts[0])
       setCurrentAccount(accounts[0])
+
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const TwitterContract = new ethers.Contract(
+        TwitterContractAddress,
+        Twitter.abi,
+        signer
+      );
+
+      let accountExists = await TwitterContract.getAccountExists();
+      console.log(accountExists);
+      if (!accountExists) {
+        let setInitialBalanceTx = await TwitterContract.setInitialBalance();
+        console.log(setInitialBalanceTx);
+      }
     } catch (error) {
       console.log('Error connecting to metamask', error)
     }
@@ -44,9 +62,9 @@ function App() {
     let chainId = await ethereum.request({ method: 'eth_chainId' })
     console.log('Connected to chain:' + chainId)
 
-    const rinkebyChainId = '0x4'
+    const sepoliaChainId = '0xaa36a7'
 
-    if (chainId !== rinkebyChainId) {
+    if (chainId !== sepoliaChainId) {
       setCorrectNetwork(false)
     } else {
       setCorrectNetwork(true)
@@ -57,8 +75,8 @@ function App() {
   useEffect(() => {
     connectWallet();
     checkCorrectNetwork();
-  });
-
+  }, []);
+  
   return (
     // BEM
     <div>
@@ -78,7 +96,7 @@ function App() {
       ) : (
       <div className='flex flex-col justify-center items-center mb-20 font-bold text-2xl gap-y-3'>
       <div>----------------------------------------</div>
-      <div>Please connect to the Rinkeby Testnet</div>
+      <div>Please connect to the Sepolia Testnet</div>
       <div>and reload the page</div>
       <div>----------------------------------------</div>
       </div>

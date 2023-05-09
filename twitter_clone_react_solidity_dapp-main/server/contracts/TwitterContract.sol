@@ -9,77 +9,27 @@ contract TwitterContract {
 
     event AddTweet(address recipient, uint tweetId);
     event DeleteTweet(uint tweetId, bool isDeleted);
-
-    event AddUser(address username)
+    event PaymentTweet(address sender, address recipient, uint amount);
+    event LikeTweet(uint tweetId, uint likesNum);
+    event ReplyTweet(address recipient, uint tweetId);
 
     struct Tweet {
         uint id;
         address username;
         string tweetText;
         bool isDeleted;
-        bool isRetweet;
-        uint replyId;
-        uint likes; //Have to update for every like 
-        uint retweets; //Have to update for every retweet
-
-    }
-
-    //Initialize users
-    struct User{
-        address username;
-        // address[] followers;
-        address[] following;
-        uint balance;
     }
 
     Tweet[] private tweets;
-    User[] private users;
 
     // Mapping of Tweet id to the wallet address of the user
     mapping(uint256 => address) tweetToOwner;
 
-    // Method to be called by our frontend when trying to add a new User
-    function addUser(address username) external{
-        users.push(User(username, [],[],1000));
-        //TODOOO - change balances
-        emit AddUser(username, 1000)
-        
-    }
+    // Mapping of wallet address to user balance
+    mapping(address => uint) userBalances;
 
-
-    // ELISE
-
-    // Method to be called by our frontend when trying to add a new user to following list 
-    function follow(){
-
-    }
-    // Method to be called by our frontend when trying to delete a user to following list 
-    function unfollow(){
-
-    }
-
-
-
-    //DIANA AND KEVIN
-
-    // Method to be called by our frontend when trying to add a new retweet
-    function retweet(){
-
-    }
-
-    // Method to be called by our frontend when trying to add a new like to a tweet
-    function like(){
-
-    }
-
-
-    //GABE
-
-    // Method to be called by our frontend when trying to transfer a payment to another user
-    function transferPayment(){
-
-    }
-
+    // Mapping of wallet address to account creation
+    mapping(address => bool) accountExists;
 
     // Method to be called by our frontend when trying to add a new Tweet
     function addTweet(string memory tweetText, bool isDeleted) external {
@@ -131,6 +81,48 @@ contract TwitterContract {
             tweets[tweetId].isDeleted = isDeleted;
             emit DeleteTweet(tweetId, isDeleted);
         }
+    }
+
+    // Method to send payment
+    function paymentTweet(address recipient, uint amount) external {
+        require(amount <= userBalances[msg.sender], "Insufficient balance");
+        userBalances[msg.sender] -= amount;
+        userBalances[recipient] += amount;
+        emit PaymentTweet(msg.sender, recipient, amount);
+    }
+
+    // Method to get user balance
+    function getBalance() external view returns (uint) {
+        return userBalances[msg.sender];
+    }
+
+    // Method to check if account exists (user logged in previously)
+    function getAccountExists() external view returns (bool) {
+        return accountExists[msg.sender];
+    }
+
+    // Method to create initial balance
+    function setInitialBalance() external {
+        accountExists[msg.sender] = true;
+        userBalances[msg.sender] = 100;
+    }
+
+    // Method to be called by our frontend when trying to add a new like to a tweet
+    function likeTweet(uint tweetId) external {
+        if(!tweets[tweetId].usersLiked[msg.sender]){
+
+            tweets[tweetId].usersLiked[msg.sender] = true
+            tweets[tweetId].likes+=1;
+            emit LikeTweet(tweetId, tweets[tweetId].likes);
+
+        }
+        else{
+
+            tweets[tweetId].usersLiked[msg.sender]=false
+            tweets[tweetId].likes-=1;
+            emit LikeTweet(tweetId, tweets[tweetId].likes);
+        }
+
     }
 
 }

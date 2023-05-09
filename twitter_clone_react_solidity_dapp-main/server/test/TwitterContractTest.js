@@ -42,6 +42,11 @@ describe("Twitter Contract", function() {
       totalTweets.push(tweet);
       totalMyTweets.push(tweet);
     }
+
+    // Set initial balances for users
+    await twitter.connect(owner).setInitialBalance();
+    await twitter.connect(addr1).setInitialBalance();
+    await twitter.connect(addr2).setInitialBalance();
   });
 
   describe("Add Tweet", function() {
@@ -82,4 +87,32 @@ describe("Twitter Contract", function() {
       );
     })
   })
+
+  describe("Payment Tweet", function() {
+    it("should emit payment tweet event", async function() {
+      const amount = 100;
+      await expect(
+        twitter.connect(owner).paymentTweet(addr1.address, amount)
+      ).to.emit(
+        twitter, 'PaymentTweet'
+      ).withArgs(
+        owner.address, addr1.address, amount
+      );
+
+      const balance1 = await twitter.connect(owner).getBalance();
+      expect(balance1).to.equal(0);
+
+      const balance2 = await twitter.connect(addr1).getBalance();
+      expect(balance2).to.equal(200);
+
+      // Check if owner balance does not change
+      let accountExists = await twitter.connect(owner).getAccountExists();
+      if (!accountExists) {
+        await twitter.connect(owner).setInitialBalance();
+      }
+      const balance3 = await twitter.connect(owner).getBalance();
+      expect(balance3).to.equal(0);
+    })
+  })
+
 });

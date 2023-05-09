@@ -31,6 +31,8 @@ function TweetBox() {
           signer
         )
 
+        console.log(await provider.getCode(TwitterContractAddress));
+
         let twitterTx = await TwitterContract.addTweet(tweet.tweetText, tweet.isDeleted);
 
         console.log(twitterTx);
