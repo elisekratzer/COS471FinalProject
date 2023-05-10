@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from "react";
+import React, { forwardRef, useState , useEffect } from "react";
 import "./Post.css";
 import Avatar from 'avataaars';
 import { generateRandomAvatarOptions } from './avatar';
@@ -6,41 +6,116 @@ import VerifiedUserIcon from "@material-ui/icons/VerifiedUser";
 import ChatBubbleOutlineIcon from "@material-ui/icons/ChatBubbleOutline";
 import RepeatIcon from "@material-ui/icons/Repeat";
 import FavoriteBorderIcon from "@material-ui/icons/FavoriteBorder";
-import PublishIcon from "@material-ui/icons/Publish";
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import { red } from '@mui/material/colors';
 import DeleteIcon from '@material-ui/icons/Delete';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import { Tooltip } from '@mui/material';
+import { TwitterContractAddress } from './config.js';
+import {ethers} from 'ethers';
+import Twitter from './utils/TwitterContract.json'
+import { Button } from "@material-ui/core";
+
 // LOOK FOR LIKE AND UNLIKE ICONS
 
 const ReplyPost = forwardRef(
-    ({ address, key, text, personal, likes, onLikeClick, onDeleteClick }, ref) => {
-    const [buttonPopup, setButtonPopup]=useState(false);
+    ({ address, key, text, personal, likes, replyTweet, onFollowClick, onLikeClick, 
+      onDeleteClick, isLiked, isFollowed, setBalance  }, ref) => {
+    const [replyMessage,setReplyMessage]=useState("");
     const [username, setUsername]=useState("");
     const [tweetId,setTweetId]=useState(0);
+    const [avatarOptions, setAvatarOptions] = useState("");
+    
+    const [isClicked, setIsClicked] = useState(false);
 
-    const [replyTweet, setreplyTweet]=useState(0);
+        
+    const addReply = async() => {
 
-/*     const getTweet = tweetId => async()=>{
-        try {
-            const {ethereum} = window
+      let tweet = {
+        'replyText': replyMessage,
+        'isDeleted': false
+      };
+      console.log("addingg reply");
       
-            if(ethereum) {
-              const provider = new ethers.providers.Web3Provider(ethereum);
-              const signer = provider.getSigner();
-              const TwitterContract = new ethers.Contract(
-                TwitterContractAddress,
-                Twitter.abi,
-                signer
-              )
+      try {
+        const {ethereum} = window;
+  
+        if(ethereum) {
+          const provider = new ethers.providers.Web3Provider(ethereum);
+          const signer = provider.getSigner();
+          const TwitterContract = new ethers.Contract(
+            TwitterContractAddress,
+            Twitter.abi,
+            signer
+          )
+          console.log( tweet.replyText);
+          console.log(tweetId);
+          await TwitterContract.replyTweet( tweet.replyText, tweetId);
+            
+        } else {
+          console.log("Ethereum object doesn't exist!");
+        }
+      } catch(error) {
+        console.log("Error submitting new Tweet", error);
+      }
+  }
+
+  const sendReply = (e) => {
+      e.preventDefault();
+      console.log("sending reply");
+
+      addReply();
       
-              let replyTweet = await TwitterContract.getTweet();
-              setreplyTweet(replyTweet);
-            } else {
-              console.log("Ethereum object doesn't exist");
-            }
-          } catch(error) {
-            console.log(error);
-          }
-    }
- */
+      setReplyMessage("");
+  };
+
+    const sendCoin = async (setBalance) => {  
+      try {
+        const {ethereum} = window
+  
+        if(ethereum) {
+          const provider = new ethers.providers.Web3Provider(ethereum);
+          const signer = provider.getSigner();
+          const TwitterContract = new ethers.Contract(
+            TwitterContractAddress,
+            Twitter.abi,
+            signer
+          )
+    
+          // Send a coin to the tweet creator
+          await TwitterContract.paymentTweet(address, 1);
+
+          // retrieve the updated balance from the contract
+          const userBalance = await TwitterContract.getBalance();
+
+          // update the userBalance state variable in Sidebar.js
+          setBalance(userBalance.toString());
+  
+        } else {
+          console.log("Ethereum object doesn't exist!");
+        }
+      } catch(error) {
+        console.log("Error submitting new Tweet", error);
+      }
+    };
+
+    const handleClick = () => {
+      setIsClicked(true);
+      sendCoin(setBalance);
+      setTimeout(() => {
+        setIsClicked(false);
+      }, 300);
+    };
+
+    // Similar to componentDidMount and componentDidUpdate:
+  useEffect(() => {
+
+    let avatar = generateRandomAvatarOptions();
+    setAvatarOptions(avatar);
+  }, []);
+
     return (
       
       <div className="post" ref={ref}>
@@ -48,7 +123,7 @@ const ReplyPost = forwardRef(
           <Avatar
             style={{ width: '100px', height: '100px' }}
             avatarStyle='Circle'
-            {...generateRandomAvatarOptions() }
+            {...avatarOptions  }
           />
         </div>
         <div className="post__body">
@@ -63,35 +138,78 @@ const ReplyPost = forwardRef(
             <div className="post__headerDescription">
               <p>{text}</p>
             </div>
-            <div className="post__replyDiv">
-
-                {replyTweet.username}
+            <div className="post__replyDiv" style={{border: '2px solid black',padding:"5px",borderRadius:"5px"}}>
+               
+               <h3>{replyTweet.username}</h3> 
                 
-                {replyTweet.tweetText}
+                <div>{replyTweet.tweetText}</div>
                 
             </div>
           </div>
           <div className="post__footer">
-            <ChatBubbleOutlineIcon fontSize="small" onClick={()=>{
-              setUsername(address);
-              setTweetId(key);
-            }}/>
-            <RepeatIcon fontSize="small" />
-            
-            <FavoriteBorderIcon fontSize="small" onClick={onLikeClick} /> 
 
-            {/* {isLiked ? (color="red"):(color="black")} */}
-
-            <p>{likes.toString()}</p>
-            <PublishIcon fontSize="small" />
-            {personal ? (
-              <DeleteIcon fontSize="small" onClick={onDeleteClick}/>
+          {!personal ? (
+              !isFollowed ? (
+                <Tooltip title="Follow User"><AddIcon fontSize="small" onClick={onFollowClick} /></Tooltip>)
+                : (
+                  <Tooltip title="Unfollow User"><CloseIcon fontSize="small" onClick={onFollowClick} /></Tooltip>
+                )
             ) : ("")}
 
-            {/* <Popup trigger={buttonPopup} setTrigger={setButtonPopup} username={username} tweetId={tweetId} >
-                
-            </Popup> */}
+            {/* <ChatBubbleOutlineIcon fontSize="small" onClick={()=>{
+              setUsername(address);
+              setTweetId(key);
+            }}/> */}
+            
+            <div >
+                {!isLiked ? (
+                <Tooltip title="Like"><FavoriteBorderIcon fontSize="small" onClick={onLikeClick} /></Tooltip>
+                ) :
+                (<Tooltip title="Remove Like"><FavoriteIcon fontSize="small" sx={{ color: red[700] }} onClick={onLikeClick} /></Tooltip>)}
+                <span>{likes.toString()}</span>
+            </div>     
+            
+            {!personal ? (
+              <Tooltip title="Send Coin">
+              <MonetizationOnIcon 
+                fontSize={isClicked ? 'large' : 'small'}
+                className={`monetization-icon ${isClicked ? 'clicked' : ''}`}
+                onClick={handleClick} />
+              </Tooltip>
+
+            ) : ("")}
+            {personal ? (
+              <Tooltip title="Delete"><DeleteIcon fontSize="small" onClick={onDeleteClick} /></Tooltip>
+            ) : ("")}
+
+
           </div>
+          {/* <div className="reply_textarea">
+          <div className="replyBox">
+            <form>
+              <div className="replyBox__input">
+                
+                <textarea
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  value={replyMessage}
+                  placeholder="Reply To Tweet"
+                  maxLength="350"
+                  rows="3" // specify the number of rows
+                />
+              </div>
+
+              <Button
+                onClick={sendReply}
+                type="submit"
+                className="replyBox__tweetButton"
+              >
+                Tweet
+              </Button>
+            </form>
+          </div>
+
+                </div> */}
+          
         </div>
       </div>
     );

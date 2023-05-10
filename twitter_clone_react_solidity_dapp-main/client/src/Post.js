@@ -1,13 +1,16 @@
-import React, { forwardRef, useState } from "react";
+import React, { forwardRef, useState , useEffect } from "react";
 import "./Post.css";
 import Avatar from 'avataaars';
 import { generateRandomAvatarOptions } from './avatar';
 import VerifiedUserIcon from "@material-ui/icons/VerifiedUser";
 import ChatBubbleOutlineIcon from "@material-ui/icons/ChatBubbleOutline";
 import FavoriteBorderIcon from "@material-ui/icons/FavoriteBorder";
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import { red } from '@mui/material/colors';
 import DeleteIcon from '@material-ui/icons/Delete';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
 import { Tooltip } from '@mui/material';
 import { TwitterContractAddress } from './config.js';
 import {ethers} from 'ethers';
@@ -15,19 +18,25 @@ import Twitter from './utils/TwitterContract.json'
 import { Button } from "@material-ui/core";
 
 const Post = forwardRef(
-  ({ setBalance, key, address, text, personal, likes, onFollowClick, onLikeClick, onDeleteClick }, ref) => {
-    const [tweetMessage,setTweetMessage]=useState("");
+  ({  tweetId, address, text, personal, likes, onFollowClick, onLikeClick, 
+    onDeleteClick, isLiked, isFollowed, setBalance }, ref) => {
+    
+    const [replyMessage,setReplyMessage]=useState("");
     const [isClicked, setIsClicked] = useState(false);
     const [showReplyBox, setShowReplyBox] = useState(false);
-    const addReply = async (tweetId) => {
-      let tweet = {
-        'tweetText': tweetMessage,
-        'isDeleted': false
+    const [avatarOptions, setAvatarOptions] = useState("");
+    const [replyId, setReplyId]=useState(0);
+    
+    const addReply = async() => {
 
+      let tweet = {
+        'replyText': replyMessage,
+        'isDeleted': false
       };
-  
+      console.log("addingg reply");
+      
       try {
-        const {ethereum} = window
+        const {ethereum} = window;
   
         if(ethereum) {
           const provider = new ethers.providers.Web3Provider(ethereum);
@@ -37,10 +46,10 @@ const Post = forwardRef(
             Twitter.abi,
             signer
           )
-  
-          let twitterTx = await TwitterContract.replyTweet( tweet.tweetText, tweetId);
-  
-          console.log(twitterTx);
+          console.log( tweet.replyText);
+          console.log(tweetId);
+          await TwitterContract.replyTweet( tweet.replyText, tweetId);
+            
         } else {
           console.log("Ethereum object doesn't exist!");
         }
@@ -49,12 +58,13 @@ const Post = forwardRef(
       }
   }
 
-  const sendTweet = (tweetId) => {
-      // e.preventDefault();
+  const sendReply = (e) => {
+      e.preventDefault();
+      console.log("sending reply");
 
-      addReply(tweetId);
+      addReply();
       
-      setTweetMessage("");
+      setReplyMessage("");
   };
 
     const sendCoin = async (setBalance) => {  
@@ -95,13 +105,23 @@ const Post = forwardRef(
       }, 300);
     };
 
+    // Similar to componentDidMount and componentDidUpdate:
+  useEffect(() => {
+    
+    console.log(tweetId);
+    setReplyId(tweetId);
+    let avatar = generateRandomAvatarOptions();
+    setAvatarOptions(avatar);
+  }, []);
+
+
     return (
       <div className="post" ref={ref}>
         <div className="post__avatar">
           <Avatar
             style={{ width: '100px', height: '100px' }}
             avatarStyle='Circle'
-            {...generateRandomAvatarOptions() }
+            {...avatarOptions }
           />
         </div>
         <div className="post__body">
@@ -117,18 +137,26 @@ const Post = forwardRef(
           </div>
           <div className="post__footer">
             {!personal ? (
-              <Tooltip title="Follow User"><AddIcon fontSize="small" onClick={onFollowClick} /></Tooltip>
+              !isFollowed ? (
+                <Tooltip title="Follow User"><AddIcon fontSize="small" onClick={onFollowClick} /></Tooltip>)
+                : (
+                  <Tooltip title="Unfollow User"><CloseIcon fontSize="small" onClick={onFollowClick} /></Tooltip>
+                )
             ) : ("")}
-            <Tooltip title="Comment"><ChatBubbleOutlineIcon fontSize="small" onClick={()=>{
+
+
+            {/* <Tooltip title="Comment"><ChatBubbleOutlineIcon fontSize="small" onClick={()=>{
               setShowReplyBox(true)
-            }} /></Tooltip>
-            <Tooltip title="Like">     
+            }} /></Tooltip> */}
+                 
               <div >
-                <FavoriteBorderIcon fontSize="small" onClick={onLikeClick} />
+                {!isLiked ? (
+                <Tooltip title="Like"><FavoriteBorderIcon fontSize="small" onClick={onLikeClick} /></Tooltip>
+                ) :
+                (<Tooltip title="Remove Like"><FavoriteIcon fontSize="small" sx={{ color: red[700] }} onClick={onLikeClick} /></Tooltip>)}
                 <span>{likes.toString()}</span>
               </div>      
            
-            </Tooltip>
             
             {!personal ? (
               <Tooltip title="Send Coin">
@@ -153,23 +181,16 @@ const Post = forwardRef(
               <div className="replyBox__input">
                 
                 <textarea
-                  onChange={(e) => setTweetMessage(e.target.value)}
-                  value={tweetMessage}
-                  placeholder="What's happening?"
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  value={replyMessage}
+                  placeholder="Reply To Tweet (max 350 chars)"
                   maxLength="350"
                   rows="3" // specify the number of rows
                 />
               </div>
-              {/* <input
-                value={tweetImage}
-                onChange={(e) => setTweetImage(e.target.value)}
-                className="replyBox__imageInput"
-                placeholder="Optional: Enter image URL"
-                type="text"
-              /> */}
 
               <Button
-                onClick={sendTweet}
+                onClick={sendReply}
                 type="submit"
                 className="replyBox__tweetButton"
               >

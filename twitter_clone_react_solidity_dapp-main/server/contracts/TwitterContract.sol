@@ -11,7 +11,10 @@ contract TwitterContract {
     event DeleteTweet(uint tweetId, bool isDeleted);
     event PaymentTweet(address sender, address recipient, uint amount);
     event LikeTweet(uint tweetId, uint likesNum);
+    event UnLikeTweet(uint tweetId, uint likesNum);
     event ReplyTweet(address recipient, uint replyTweetId);
+    event Follow(address recipient);
+    event Unfollow(address recipient);
 
     struct Tweet {
         uint id;
@@ -76,7 +79,7 @@ contract TwitterContract {
         }
         return result;
     }
-
+    
     // Method to get only your Tweets
     function getMyTweets() external view returns (Tweet[] memory) {
         Tweet[] memory temporary = new Tweet[](tweets.length);
@@ -118,7 +121,7 @@ contract TwitterContract {
                 
                 tweets[tweetId].usersLiked.pop();
                 tweets[tweetId].likes=tweets[tweetId].likes-1;
-                emit LikeTweet(tweetId, tweets[tweetId].likes);
+                emit UnLikeTweet(tweetId, tweets[tweetId].likes);
                 return;
             }
         }
@@ -127,22 +130,6 @@ contract TwitterContract {
             tweets[tweetId].likes=tweets[tweetId].likes+1;
             emit LikeTweet(tweetId, tweets[tweetId].likes);
         }
-        
-        // if(!tweets[tweetId].usersLiked[msg.sender]){
-
-        //     tweets[tweetId].usersLiked[msg.sender] = true;
-        //     tweets[tweetId].likes+=1;
-        //     emit LikeTweet(tweetId, tweets[tweetId].likes);
-            
-        // }
-        // else{
-            
-        //     tweets[tweetId].usersLiked[msg.sender]=false;
-        //     tweets[tweetId].likes-=1;
-        //     emit LikeTweet(tweetId, tweets[tweetId].likes);
-
-        // }
-
     }
 
     // Method to be called by our frontend when trying to reply to a tweet
@@ -191,20 +178,30 @@ contract TwitterContract {
         return userDisplayNames[msg.sender];
     }
 
-    // Method to add follow
-    function addFollow(address userToFollow) external {
+    // Method to add or remove follow
+    function toggleFollow(address userToFollow) external {
         bool isAlreadyFollowing = false;
         address[] storage followingList = usersFollowing[msg.sender];
+        uint indexToRemove = 0;
 
         for (uint i = 0; i < followingList.length; i++) {
             if (followingList[i] == userToFollow) {
                 isAlreadyFollowing = true;
+                indexToRemove = i;
                 break;
             }
         }
 
         if (!isAlreadyFollowing) {
             followingList.push(userToFollow);
+            emit Follow(userToFollow);
+        }
+        else {
+            for(uint i=indexToRemove; i<followingList.length-1; i++) {
+                followingList[i] = followingList[i+1];
+            }
+            followingList.pop();
+            emit Unfollow(userToFollow);
         }
     }
 

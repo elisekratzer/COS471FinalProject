@@ -156,5 +156,15 @@ describe("Twitter Contract", function() {
     })
   });
 
-
+  describe("Follow User", function() {
+    it("should emit Follow event", async function() {
+      await expect(
+        twitter.connect(owner).toggleFollow(addr1.address)
+      ).to.emit(
+        twitter, 'Follow'
+      ).withArgs(
+        addr1.address
+      );
+    })
+  });
 });

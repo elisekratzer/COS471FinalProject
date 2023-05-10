@@ -71,7 +71,7 @@ function TweetBox() {
           <textarea
             onChange={(e) => setTweetMessage(e.target.value)}
             value={tweetMessage}
-            placeholder="What's happening?"
+            placeholder="What's happening? (max 350 chars)"
             maxLength="350"
             rows="3" // specify the number of rows
           />

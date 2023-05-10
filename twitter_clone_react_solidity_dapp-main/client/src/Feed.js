@@ -12,6 +12,7 @@ import Twitter from './utils/TwitterContract.json'
 
 function Feed(props) {
   const [posts, setPosts] = useState([]);
+  const [follows, setFollows] = useState([]);
 
   const getUpdatedTweets = (allTweets, address) => {
     let updatedTweets = [];
@@ -26,8 +27,10 @@ function Feed(props) {
           'isDeleted': allTweets[i].isDeleted,
           'username': allTweets[i].username,
           'isReply': allTweets[i].isReply,
+          'replyId':allTweets[i].replyId,
           'personal': true,
-          'likes': allTweets[i].likes
+          'likes': allTweets[i].likes,
+          'usersLiked':allTweets[i].usersLiked
         };
         updatedTweets.push(tweet);
       } else {
@@ -37,8 +40,10 @@ function Feed(props) {
           'isDeleted': allTweets[i].isDeleted,
           'username': allTweets[i].username,
           'isReply': allTweets[i].isReply,
+          'replyId':allTweets[i].replyId,
           'personal': false,
-          'likes': allTweets[i].likes
+          'likes': allTweets[i].likes,
+          'usersLiked':allTweets[i].usersLiked
         };
         updatedTweets.push(tweet);
       }
@@ -60,12 +65,10 @@ function Feed(props) {
           signer
         )
 
-        console.log("Part 1")
         let allTweets = await TwitterContract.getAllTweets(); 
-        console.log("Part 2")
-        console.log(allTweets)
+        let follows = await TwitterContract.getFollows();
+        setFollows(follows);
         setPosts(getUpdatedTweets(allTweets, ethereum.selectedAddress));
-        console.log("Part 3")
       } else {
         console.log("Ethereum object doesn't exist");
       }
@@ -144,7 +147,7 @@ function Feed(props) {
           signer
         );
 
-        let addFollowerTx = await TwitterContract.addFollow(addr);
+        await TwitterContract.toggleFollow(addr);
       } else {
         console.log("Ethereum object doesn't exist");
       }
@@ -152,6 +155,45 @@ function Feed(props) {
       console.log(error);
     }
   };
+
+  const isLikedFunc = usersLiked => {
+    try {
+      const {ethereum} = window
+
+      let address = ethereum.selectedAddress;
+
+      for(let i=0; i<usersLiked.length; i++) {
+        if (usersLiked[i].toLowerCase() == address.toLowerCase()) {
+          return true;
+        }
+      }
+      return false;
+
+    } catch(error) {
+      console.log(error);
+    }
+  };
+
+  const isFollowedFunc = addr => {
+    for (let i = 0; i < follows.length; i++) {
+      if (addr.toLowerCase() == follows[i].username.toLowerCase()) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const findReplyTweet=replyTweetid=>{
+    
+    for(let i=0; i<posts.length; i++) {
+     
+      if (posts[i].id.eq(replyTweetid)) {
+        
+        return posts[i];
+      }
+    }
+    return null;
+  }
 
 
   return (
@@ -168,18 +210,22 @@ function Feed(props) {
           post.isReply?(
             
             <ReplyPost
-              key={post.id}
+              tweetId={post.id}
               address={post.username}
               text={post.tweetText}
               personal={post.personal}
               likes={post.likes}
+              replyTweet={findReplyTweet(post.replyId)}
+              onFollowClick={followUser(post.username)}
               onLikeClick={likeTweet(post.id)}
               onDeleteClick={deleteTweet(post.id)}
+              isLiked={isLikedFunc(post.usersLiked)}
+              isFollowed={isFollowedFunc(post.username)}
             />
           ) : (
           
           <Post
-            key={post.id}
+            tweetId={post.id}
             address={post.username}
             text={post.tweetText}
             personal={post.personal}
@@ -187,6 +233,8 @@ function Feed(props) {
             onFollowClick={followUser(post.username)}
             onLikeClick={likeTweet(post.id)}
             onDeleteClick={deleteTweet(post.id)}
+            isLiked={isLikedFunc(post.usersLiked)}
+            isFollowed={isFollowedFunc(post.username)}
           />)
         
         ))}
